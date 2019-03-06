@@ -2,6 +2,7 @@ import scrapy
 
 class QuoteSpider(scrapy.Spider):
   name = "quotes"
+  
 
   start_urls = [
     'http://quotes.toscrape.com/page/1/',
@@ -9,8 +10,9 @@ class QuoteSpider(scrapy.Spider):
   ]
 
   def parse(self, response):
-    page = response.url.split("/")[-2]
-    filename = 'quotes-%s.html' % page
-    with open(filename, 'wb') as f:
-      f.write(response.body)
-    self.log('Save file %s' % filename)
+    for quote in response.css('div.quote'):
+      yield {
+        'text' : quote.css('span.text::text').get(),
+        'author' : quote.css('small.author::text').get(),
+        'tags' : quote.css('div.tags a.tag::text').getall(),
+      }
